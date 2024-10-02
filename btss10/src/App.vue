@@ -117,7 +117,7 @@
     <div v-if="showAddForm" class="overlay">
       <form class="form">
         <div class="d-flex justify-content-between align-items-center">
-          <h4>Chỉnh sửa nhân viên</h4>
+          <h4>{{ currentEmployee ? "Chỉnh sửa" : "Thêm mới" }} nhân viên</h4>
           <i class="fa-solid fa-xmark" @click="closeForm"></i>
         </div>
         <div>
@@ -157,7 +157,10 @@
           ></textarea>
         </div>
         <div>
-          <button class="w-100 btn btn-primary" @click="addOrUpdateEmployee">
+          <button
+            class="w-100 btn btn-primary"
+            @click.prevent="addOrUpdateEmployee"
+          >
             Lưu
           </button>
         </div>
@@ -263,19 +266,39 @@ const openAddEmployeeForm = () => {
 const closeForm = () => {
   showAddForm.value = false;
   formData.value = { name: "", dob: "", email: "", address: "" };
+  currentEmployee.value = null;
 };
 
 const addOrUpdateEmployee = () => {
-  if (currentEmployee.value) {
-    Object.assign(currentEmployee.value, formData.value);
-  } else {
-    employees.value.push({ ...formData.value, status: "active" });
+  let formattedDob = formData.value.dob;
+
+  // Convert YYYY-MM-DD to DD/MM/YYYY before saving
+  if (/^\d{4}-\d{2}-\d{2}$/.test(formData.value.dob)) {
+    const [year, month, day] = formData.value.dob.split("-");
+    formattedDob = `${day}/${month}/${year}`;
   }
+
+  if (currentEmployee.value) {
+    Object.assign(currentEmployee.value, {
+      ...formData.value,
+      dob: formattedDob,
+    });
+  } else {
+    employees.value.push({ ...formData.value, dob: formattedDob });
+  }
+
   closeForm();
 };
 
 const editEmployee = (employee) => {
-  formData.value = { ...employee };
+  let formattedDob = employee.dob;
+
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(employee.dob)) {
+    const [day, month, year] = employee.dob.split("/");
+    formattedDob = `${year}-${month}-${day}`;
+  }
+
+  formData.value = { ...employee, dob: formattedDob };
   currentEmployee.value = employee;
   openAddEmployeeForm();
 };
@@ -285,15 +308,14 @@ const confirmDelete = (employee) => {
   showDeleteConfirm.value = true;
 };
 
-const closeConfirm = () => {
+const deleteEmployee = () => {
+  employees.value = employees.value.filter((e) => e !== currentEmployee.value);
   showDeleteConfirm.value = false;
+  currentEmployee.value = null;
 };
 
-const deleteEmployee = () => {
-  employees.value = employees.value.filter(
-    (e) => e.email !== currentEmployee.value.email
-  );
-  closeConfirm();
+const closeConfirm = () => {
+  showDeleteConfirm.value = false;
 };
 
 const toggleBlock = (employee) => {
