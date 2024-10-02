@@ -272,7 +272,6 @@ const closeForm = () => {
 const addOrUpdateEmployee = () => {
   let formattedDob = formData.value.dob;
 
-  // Convert YYYY-MM-DD to DD/MM/YYYY before saving
   if (/^\d{4}-\d{2}-\d{2}$/.test(formData.value.dob)) {
     const [year, month, day] = formData.value.dob.split("-");
     formattedDob = `${day}/${month}/${year}`;
